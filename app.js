@@ -5,11 +5,11 @@ import express from "express";
 import mysql2 from 'mysql2';
 import dotenv from 'dotenv';
 
-// Loads the enviorment vars from .env file.
+// Loads the environment vars from .env file.
 dotenv.config();
 
 // Database connection pool.
-const pool = mysql2.createPool ({
+const pool = mysql2.createPool({
   host: process.env.DB_HOST,
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
@@ -51,13 +51,30 @@ app.post('/submit-order', (req, res) => {
   res.render('confirmation', { order })
 })
 
-app.get('/admin', (req, res) => {
-  res.render('admin', { orders });
+app.get('/admin', async (req, res) => {
+  try {
+    const [orders] = await pool.query('SELECT * FROM orders ORDER BY timestamp DESC');
+
+    res.render('admin', { orders });
+  } catch (err) {
+    console.error('Database error:', err);
+    res.status(500).send('Error loading orders: ' + err.message);
+  }
 });
 
 app.get('/confirmation', (req, res) => {
   res.render('confirmation');
-})
+});
+
+app.get('/db-test', async (req, res) => {
+  try {
+    const orders = await pool.query('SELECT * FROM orders;');
+    res.send(orders[0]);
+  } catch (err) {
+    console.error('Database error:', err);
+    res.status(500).send('Database error: ' + err.message);
+  }
+});
 
 // Start the server and listen on the specified port
 app.listen(PORT, () => {
