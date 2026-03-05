@@ -29,14 +29,12 @@ app.use(express.static('public'));
 app.use(express.urlencoded({ extended: true }))
 const orders = [];
 
-
-
 // Define a default "route" ('/')
 app.get("/", (req, res) => {
   res.render('home');
 });
 
-app.post('/submit-order',async (req, res) => {
+app.post('/submit-order', async (req, res) => {
   const order = {
     name: req.body.name,
     email: req.body.email,
@@ -47,16 +45,17 @@ app.post('/submit-order',async (req, res) => {
     timestamp: new Date()
   }
 
+  // For saving toppings to database
   let stringToppings = Array.isArray(order.toppings) ? order.toppings.join(", ") : "";
   const sql = `INSERT INTO orders (customer, email, flavor, cone, toppings) VALUES (?, ?, ?, ?, ?);`;
-  const params = [ order.name, order.email, order.flavor, order.cone, order.toppings];
-  try {
+  const params = [ order.name, order.email, order.flavor, order.cone, stringToppings];
 
-  
-  const result = await pool.execute(sql, params);
-  console.log('order saved with ID:', result[0].insertId);
-  orders.push(order);
-  res.render('confirmation', { order })
+  // Catch errors when saving
+  try {
+    const result = await pool.execute(sql, params);
+    console.log('order saved with ID:', result[0].insertId);
+    orders.push(order);
+    res.render('confirmation', { order })
   } catch (err) {
     console.error('error savings order:', err);
     res.status(500).send('sorry, there was an error processing your order. Please try again.');
@@ -65,6 +64,7 @@ app.post('/submit-order',async (req, res) => {
 
 
 app.get('/admin', async (req, res) => {
+  // Catch errors for admin querying
   try {
     const [orders] = await pool.query('SELECT * FROM orders ORDER BY timestamp DESC');
 
@@ -80,6 +80,7 @@ app.get('/confirmation', (req, res) => {
 });
 
 app.get('/db-test', async (req, res) => {
+  // Catch errors for testing
   try {
     const orders = await pool.query('SELECT * FROM orders;');
     res.send(orders[0]);
