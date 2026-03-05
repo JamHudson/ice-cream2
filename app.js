@@ -36,7 +36,7 @@ app.get("/", (req, res) => {
   res.render('home');
 });
 
-app.post('/submit-order', (req, res) => {
+app.post('/submit-order',async (req, res) => {
   const order = {
     name: req.body.name,
     email: req.body.email,
@@ -47,9 +47,22 @@ app.post('/submit-order', (req, res) => {
     timestamp: new Date()
   }
 
+  let stringToppings = Array.isArray(order.toppings) ? order.toppings.join(", ") : "";
+  const sql = `INSERT INTO orders(customer, email, flavor, cone, toppings) VALUES (?, ?, ?, ?, ?);`;
+  const params = [ order.name, order.email, order.cone, order.flavor];
+  try {
+
+  
+  const result = await pool.execute(sql, params);
+  console.log('order saved with ID:', result[0].insertId);
   orders.push(order);
   res.render('confirmation', { order })
+  } catch (err) {
+    console.error('error savings order:', err);
+    res.status(500).send('sorry, there was an error processing your order. Please try again.');
+  }
 })
+
 
 app.get('/admin', async (req, res) => {
   try {
