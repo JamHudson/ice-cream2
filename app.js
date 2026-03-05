@@ -1,6 +1,22 @@
 // Import the express module
 import express from "express";
 
+// essential for connecting datebase.
+import mysql2 from 'mysql2';
+import dotenv from 'dotenv';
+
+// Loads the enviorment vars from .env file.
+dotenv.config();
+
+// Database connection pool.
+const pool = mysql2.createPool ({
+  host: process.env.DB_HOST,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_NAME,
+  port: process.env.DB_PORT
+}).promise();
+
 // Create an instance of an Express application
 const app = express();
 
